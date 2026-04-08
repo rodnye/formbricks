@@ -52,7 +52,7 @@ if [ "${SKIP_STARTUP_MIGRATION:-false}" = "true" ]; then
   echo "⏭️ Skipping startup migrations (handled by migration job)"
 else
   echo "🗃️ Running database migrations..."
-  run_with_timeout 300 "database migration" npm run --prefix packages/database db:migrate:deploy
+  run_with_timeout 300 "database migration" npm run --cwd packages/database db:migrate:deploy
 fi
 
 echo "🗃️ Running SAML database setup..."
