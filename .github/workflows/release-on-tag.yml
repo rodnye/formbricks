@@ -1,0 +1,45 @@
+name: Build and Publish Docker Image on Tag
+
+on:
+  push:
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+*"
+      - "v[0-9]+.[0-9]+.[0-9]+*"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  prepare-and-release:
+    runs-on: ubuntu-latest
+    outputs:
+      IS_PRERELEASE: ${{ steps.check-tag.outputs.IS_PRERELEASE }}
+      MAKE_LATEST: ${{ steps.check-tag.outputs.MAKE_LATEST }}
+    steps:
+      - name: Check tag type
+        id: check-tag
+        run: |
+          TAG="${{ github.ref_name }}"
+          # Remove v prefix for checking
+          CLEAN_TAG="${TAG#v}"
+
+          # Check if it's a prerelease (contains alpha, beta, rc, pre)
+          if [[ "$CLEAN_TAG" =~ -(alpha|beta|rc|pre) ]]; then
+            echo "IS_PRERELEASE=true" >> $GITHUB_OUTPUT
+            echo "MAKE_LATEST=false" >> $GITHUB_OUTPUT
+            echo "Detected prerelease tag: $TAG"
+          else
+            echo "IS_PRERELEASE=false" >> $GITHUB_OUTPUT
+            # Only mark as latest if it's a stable release
+            echo "MAKE_LATEST=true" >> $GITHUB_OUTPUT
+            echo "Detected stable release tag: $TAG"
+          fi
+
+  call-release-workflow:
+    needs: prepare-and-release
+    uses: ./.github/workflows/release-docker-github.yml
+    with:
+      IS_PRERELEASE: ${{ needs.prepare-and-release.outputs.IS_PRERELEASE }}
+      MAKE_LATEST: ${{ needs.prepare-and-release.outputs.MAKE_LATEST }}
+    secrets: inherit
