@@ -8,7 +8,7 @@ run_with_timeout() {
   _timeout_duration="$1"
   _timeout_name="$2"
   shift 2
-  
+
   if command -v timeout >/dev/null 2>&1; then
     # timeout command is available, use it
     echo "Using timeout ($_timeout_duration seconds) for $_timeout_name"
@@ -26,7 +26,7 @@ run_with_timeout() {
         echo "📋 Note: Process may hang indefinitely if there are connectivity issues"
       }
     fi
-    
+
     # Run the command (either with newly installed timeout or without timeout)
     if command -v timeout >/dev/null 2>&1; then
       echo "✅ timeout installed, using timeout ($_timeout_duration seconds) for $_timeout_name"
@@ -52,7 +52,7 @@ if [ "${SKIP_STARTUP_MIGRATION:-false}" = "true" ]; then
   echo "⏭️ Skipping startup migrations (handled by migration job)"
 else
   echo "🗃️ Running database migrations..."
-  run_with_timeout 300 "database migration" node packages/database/dist/scripts/apply-migrations.js
+  run_with_timeout 300 "database migration" npm run --prefix packages/database db:migrate:deploy
 fi
 
 echo "🗃️ Running SAML database setup..."
